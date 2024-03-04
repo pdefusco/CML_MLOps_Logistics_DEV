@@ -1,0 +1,4 @@
+stumpy==1.12.0
+Faker==20.1.0
+dbldatagen==0.3.5
+jmespath==1.0.1
