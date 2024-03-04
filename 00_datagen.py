@@ -48,6 +48,8 @@ import dbldatagen.distributions as dist
 from dbldatagen import FakerTextFactory, DataGenerator, fakerText
 from faker.providers import bank, credit_card, currency
 import cml.data_v1 as cmldata
+from functools import reduce
+from pyspark.sql import DataFrame
 
 
 class IotDataGen:
@@ -61,7 +63,7 @@ class IotDataGen:
         self.connectionName = connectionName
 
 
-    def dataGen(self, spark, shuffle_partitions_requested = 5, partitions_requested = 10, data_rows = 100000):
+    def dataGen(self, spark, shuffle_partitions_requested = 5, partitions_requested = 10, data_rows = 100000, minLatitude, maxLatitude, minLongitude, maxLongitude):
         """
         Method to create credit card transactions in Spark Df
         """
@@ -77,8 +79,8 @@ class IotDataGen:
             .withColumn("model_ser", "integer", minValue=1, maxValue=11, baseColumn="device_id", baseColumnType="hash", omit=True, )
             .withColumn("event_type", "string", values=["activation", "deactivation", "tank below 10%", "tank below 5%", "device error", "system malfunction"], random=True)
             .withColumn("event_ts", "timestamp", begin="2023-01-01 01:00:00", end="2023-12-31 23:59:00", interval="1 minute", random=True )
-            .withColumn("longitude", "float", minValue=-180, maxValue=180, random=True )
-            .withColumn("latitude", "float", minValue=-90, maxValue=90, random=True )
+            .withColumn("longitude", "float", minValue=minLongitude, maxValue=maxLongitude, random=True )
+            .withColumn("latitude", "float", minValue=minLatitude, maxValue=maxLatitude, random=True )
             .withColumn("iot_signal_A", "float", minValue=0.01, maxValue=500000, random=True)
             .withColumn("iot_signal_B", "float", minValue=10000, maxValue=50000, random=True)
             .withColumn("iot_signal_C", "float", minValue=0.01, maxValue=5000, random=True)
@@ -154,8 +156,28 @@ def main():
     # Create CML Spark Connection
     spark = dg.createSparkConnection()
 
-    # Create Banking Transactions DF
-    df = dg.dataGen(spark)
+    #  MAX BOX - MIDWEST
+    #  .withColumn("longitude", "float", minValue=-114.5, maxValue=-94.5, random=True )
+    #  .withColumn("latitude", "float", minValue=33.01, maxValue=48.5, random=True )
+
+    #  SMALLER BOXES - DENVER, CO
+    #  .withColumn("longitude", "float", minValue=-104.9900, maxValue=-104.9500, random=True )
+    #  .withColumn("latitude", "float", minValue=39.75683, maxValue=40.25437, random=True )
+
+    #  SMALLER BOXES - DES MOINES, IA
+    #  .withColumn("longitude", "float", minValue=-93.9000, maxValue=-93.5000, random=True )
+    #  .withColumn("latitude", "float", minValue=41.51341, maxValue=41.67468, random=True )
+
+    midwest_minLatitude, midwest_maxLatitude, midwest_minLongitude, midwest_maxLongitude = 33.01, 48.5, -114.5, -94.5
+    denver_minLatitude, denver_maxLatitude, denver_minLongitude, denver_maxLongitude = 39.75683, 40.25437, -104.9900, -104.9500
+    desmoines_minLatitude, desmoines_maxLatitude, desmoines_minLongitude, desmoines_maxLongitude = 41.51341, 41.67468, -93.9000, -93.5000
+
+    df_midwest = dg.dataGen(spark, midwest_minLatitude, midwest_maxLatitude, midwest_minLongitude, midwest_maxLongitude)
+    df_denver = dg.dataGen(spark, denver_minLatitude, denver_maxLatitude, denver_minLongitude, denver_maxLongitude)
+    df_desmoines = dg.dataGen(spark, desmoines_minLatitude, desmoines_maxLatitude, desmoines_minLongitude, desmoines_maxLongitude)
+
+    dfs = [df_midwest,df_denver,df_desmoines]
+    df = reduce(DataFrame.unionAll, dfs)
 
     # Create Spark Database
     dg.createDatabase(spark)
