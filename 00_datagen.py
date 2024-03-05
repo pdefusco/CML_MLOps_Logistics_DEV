@@ -63,7 +63,7 @@ class IotDataGen:
         self.connectionName = connectionName
 
 
-    def dataGen(self, spark, shuffle_partitions_requested = 5, partitions_requested = 10, data_rows = 100000, minLatitude, maxLatitude, minLongitude, maxLongitude):
+    def dataGen(self, spark, minLatitude, maxLatitude, minLongitude, maxLongitude, shuffle_partitions_requested = 5, partitions_requested = 10, data_rows = 14400):
         """
         Method to create credit card transactions in Spark Df
         """
@@ -73,18 +73,18 @@ class IotDataGen:
         iotDataSpec = (
             dg.DataGenerator(spark, name="device_data_set", rows=data_rows, partitions=partitions_requested)
             .withIdOutput()
-            .withColumn("internal_device_id", "long", minValue=0x1000000000000, uniqueValues=device_population, omit=True, baseColumnType="hash")
+            .withColumn("internal_device_id", "long", minValue=0x1000000000000, uniqueValues=int(data_rows/1440), omit=True, baseColumnType="hash")
             .withColumn("device_id", "string", format="0x%013x", baseColumn="internal_device_id")
             .withColumn("manufacturer", "string", values=manufacturers, baseColumn="internal_device_id", )
             .withColumn("model_ser", "integer", minValue=1, maxValue=11, baseColumn="device_id", baseColumnType="hash", omit=True, )
-            .withColumn("event_type", "string", values=["activation", "deactivation", "tank below 10%", "tank below 5%", "device error", "system malfunction"], random=True)
-            .withColumn("event_ts", "timestamp", begin="2023-01-01 01:00:00", end="2023-12-31 23:59:00", interval="1 minute", random=True )
+            .withColumn("event_type", "string", values=["tank below 10%", "tank below 5%", "device error", "system malfunction"], random=True)
+            .withColumn("event_ts", "timestamp", begin="2023-12-01 01:00:00", end="2023-12-01 23:59:00", interval="1 minute", random=False )
             .withColumn("longitude", "float", minValue=minLongitude, maxValue=maxLongitude, random=True )
             .withColumn("latitude", "float", minValue=minLatitude, maxValue=maxLatitude, random=True )
-            .withColumn("iot_signal_A", "float", minValue=0.01, maxValue=500000, random=True)
-            .withColumn("iot_signal_B", "float", minValue=10000, maxValue=50000, random=True)
-            .withColumn("iot_signal_C", "float", minValue=0.01, maxValue=5000, random=True)
-            .withColumn("iot_signal_D", "float", minValue=0.01, maxValue=500000, random=True)
+            .withColumn("iot_signal_1", "integer", minValue=1, maxValue=10, random=True)
+            .withColumn("iot_signal_2", "integer", minValue=1000, maxValue=1020, random=True)
+            .withColumn("iot_signal_3", "integer", minValue=50, maxValue=55, random=True)
+            .withColumn("iot_signal_4", "integer", minValue=100, maxValue=107, random=True)
         )
 
         df = iotDataSpec.build()
@@ -117,6 +117,18 @@ class IotDataGen:
 
         print("SHOW DATABASES LIKE '{}'".format(self.dbname))
         spark.sql("SHOW DATABASES LIKE '{}'".format(self.dbname)).show()
+
+
+    def dropDatabase(self, spark):
+        """
+        Method to drop database used by previous demo run
+        """
+
+        print("SHOW DATABASES PRE DROP")
+        spark.sql("SHOW DATABASES").show()
+        spark.sql("DROP DATABASE IF EXISTS {} CASCADE;".format(self.dbname))
+        print("\nSHOW DATABASES AFTER DROP")
+        spark.sql("SHOW DATABASES").show()
 
 
     def createOrReplace(self, df):
@@ -156,34 +168,17 @@ def main():
     # Create CML Spark Connection
     spark = dg.createSparkConnection()
 
-    #  MAX BOX - MIDWEST
-    #  .withColumn("longitude", "float", minValue=-114.5, maxValue=-94.5, random=True )
-    #  .withColumn("latitude", "float", minValue=33.01, maxValue=48.5, random=True )
-
-    #  SMALLER BOXES - DENVER, CO
-    #  .withColumn("longitude", "float", minValue=-104.9900, maxValue=-104.9500, random=True )
-    #  .withColumn("latitude", "float", minValue=39.75683, maxValue=40.25437, random=True )
-
-    #  SMALLER BOXES - DES MOINES, IA
-    #  .withColumn("longitude", "float", minValue=-93.9000, maxValue=-93.5000, random=True )
-    #  .withColumn("latitude", "float", minValue=41.51341, maxValue=41.67468, random=True )
-
-    midwest_minLatitude, midwest_maxLatitude, midwest_minLongitude, midwest_maxLongitude = 33.01, 48.5, -114.5, -94.5
-    denver_minLatitude, denver_maxLatitude, denver_minLongitude, denver_maxLongitude = 39.75683, 40.25437, -104.9900, -104.9500
     desmoines_minLatitude, desmoines_maxLatitude, desmoines_minLongitude, desmoines_maxLongitude = 41.51341, 41.67468, -93.9000, -93.5000
-
-    df_midwest = dg.dataGen(spark, midwest_minLatitude, midwest_maxLatitude, midwest_minLongitude, midwest_maxLongitude)
-    df_denver = dg.dataGen(spark, denver_minLatitude, denver_maxLatitude, denver_minLongitude, denver_maxLongitude)
     df_desmoines = dg.dataGen(spark, desmoines_minLatitude, desmoines_maxLatitude, desmoines_minLongitude, desmoines_maxLongitude)
 
-    dfs = [df_midwest,df_denver,df_desmoines]
-    df = reduce(DataFrame.unionAll, dfs)
+    # Drop Spark Database if exists
+    dg.dropDatabase(spark)
 
     # Create Spark Database
     dg.createDatabase(spark)
 
     # Create Iceberg Table in Database
-    dg.createOrReplace(df)
+    dg.createOrReplace(df_desmoines)
 
     # Validate Iceberg Table in Database
     dg.validateTable(spark)

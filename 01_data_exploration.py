@@ -36,3 +36,7 @@
 #
 # #  Author(s): Paul de Fusco
 #***************************************************************************/
+
+import pandas as pd
+
+pd.read_csv("data/iot_fleet_data.csv")
