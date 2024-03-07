@@ -5,3 +5,4 @@ jmespath==1.0.1
 pyarrow==14.0.1
 seaborn==0.13.2
 pandas==1.5.3
+apache-sedona==1.5.1

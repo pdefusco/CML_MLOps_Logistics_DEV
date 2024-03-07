@@ -37,6 +37,25 @@
 # #  Author(s): Paul de Fusco
 #***************************************************************************/
 
+from pyspark import SparkContext
+import os, warnings, sys, logging
 import pandas as pd
+import numpy as np
+from datetime import date
+import cml.data_v1 as cmldata
+import pyspark.pandas as ps
+import seaborn as sns
+import stumpy
 
-pd.read_csv("data/iot_fleet_data.csv")
+USERNAME = os.environ["PROJECT_OWNER"]
+DBNAME = "LOGISTICS_MLOPS_DEMO"
+STORAGE = "s3a://goes-se-sandbox01"
+CONNECTION_NAME = "se-aw-mdl"
+DATE = date.today()
+
+SparkContext.setSystemProperty('spark.jars.packages', 'sedona-spark-3.0_2.12-1.5.1.jar')
+
+conn = cmldata.get_connection(CONNECTION_NAME)
+spark = conn.get_spark_session()
+
+iotFleetDf = spark.sql('SELECT * FROM {0}.IOT_FLEET_{1}'.format(DBNAME, USERNAME))

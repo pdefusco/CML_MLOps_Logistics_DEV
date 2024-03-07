@@ -224,16 +224,6 @@ createModelBuildResponse = deployment.createModelBuild(projectId=prdProjId, \
 modelBuildId = createModelBuildResponse.id
 deployment.createModelDeployment(modelBuildId, prdProjId, modelCreationId)
 
-CreateModelDeploymentRequest = {
-          "cpu" : "2",
-          "memory" : "4",
-        }
-
-
-#CreateModelDeploymentRequest = cmlapi.CreateModelDeploymentRequest(CreateModelDeploymentRequest)
-api_instance = cmlapi.default_client()
-api_response = api_instance.create_model_deployment(CreateModelDeploymentRequest, prdProjId, modelCreationId, modelBuildId)
-
 
 ## NOW TRY A REQUEST WITH THIS PAYLOAD!
 
