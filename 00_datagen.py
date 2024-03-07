@@ -54,7 +54,7 @@ from pyspark.sql import DataFrame
 
 class IotDataGen:
 
-    '''Class to Generate IoT Data'''
+    '''Class to Generate IoT Fleet Data'''
 
     def __init__(self, username, dbname, storage, connectionName):
         self.username = username
@@ -65,7 +65,7 @@ class IotDataGen:
 
     def dataGen(self, spark, minLatitude, maxLatitude, minLongitude, maxLongitude, shuffle_partitions_requested = 5, partitions_requested = 10, data_rows = 14400):
         """
-        Method to create credit card transactions in Spark Df
+        Method to create IoT fleet data in Spark Df
         """
 
         manufacturers = ["New World Corp", "AIAI Inc.", "Hot Data Ltd"]
