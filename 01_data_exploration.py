@@ -47,15 +47,45 @@ import pyspark.pandas as ps
 import seaborn as sns
 import stumpy
 
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+from sedona.register import SedonaRegistrator
+import os, warnings, sys, logging
+import pandas as pd
+import numpy as np
+from datetime import date
+import cml.data_v1 as cmldata
+import seaborn as sns
+import stumpy
+
 USERNAME = os.environ["PROJECT_OWNER"]
 DBNAME = "LOGISTICS_MLOPS_DEMO"
 STORAGE = "s3a://goes-se-sandbox01"
 CONNECTION_NAME = "se-aw-mdl"
 DATE = date.today()
 
-SparkContext.setSystemProperty('spark.jars.packages', 'sedona-spark-3.0_2.12-1.5.1.jar')
+from pyspark.sql import SparkSession
+from pyspark import StorageLevel
+import pandas as pd
+from pyspark.sql.types import StructType
+from pyspark.sql.types import StructField
+from pyspark.sql.types import StringType
+from pyspark.sql.types import LongType
+from shapely.geometry import Point
+from shapely.geometry import Polygon
 
-conn = cmldata.get_connection(CONNECTION_NAME)
-spark = conn.get_spark_session()
+from sedona.spark import *
+from sedona.core.geom.envelope import Envelope
+
+
+config = SedonaContext.builder() .\
+    config('spark.jars.packages',
+           'org.apache.sedona:sedona-spark-3.0_2.12:1.5.1,'
+           'org.datasyslab:geotools-wrapper:1.5.1-28.2,'
+           'uk.co.gresearch.spark:spark-extension_2.12:2.11.0-3.4'). \
+    config('spark.jars.repositories', 'https://artifacts.unidata.ucar.edu/repository/unidata-all'). \
+    getOrCreate()
+
+sedona = SedonaContext.create(config)
 
 iotFleetDf = spark.sql('SELECT * FROM {0}.IOT_FLEET_{1}'.format(DBNAME, USERNAME))
