@@ -38,16 +38,6 @@
 #***************************************************************************/
 
 from pyspark import SparkContext
-import os, warnings, sys, logging
-import pandas as pd
-import numpy as np
-from datetime import date
-import cml.data_v1 as cmldata
-import pyspark.pandas as ps
-import seaborn as sns
-import stumpy
-
-from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from sedona.register import SedonaRegistrator
 import os, warnings, sys, logging
@@ -67,12 +57,6 @@ DATE = date.today()
 from pyspark.sql import SparkSession
 from pyspark import StorageLevel
 import pandas as pd
-from pyspark.sql.types import StructType
-from pyspark.sql.types import StructField
-from pyspark.sql.types import StringType
-from pyspark.sql.types import LongType
-from shapely.geometry import Point
-from shapely.geometry import Polygon
 
 from sedona.spark import *
 from sedona.core.geom.envelope import Envelope
@@ -87,5 +71,6 @@ config = SedonaContext.builder() .\
     getOrCreate()
 
 sedona = SedonaContext.create(config)
+
 
 iotFleetDf = spark.sql('SELECT * FROM {0}.IOT_FLEET_{1}'.format(DBNAME, USERNAME))
