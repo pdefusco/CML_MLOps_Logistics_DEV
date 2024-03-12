@@ -224,7 +224,6 @@ createModelBuildResponse = deployment.createModelBuild(projectId=prdProjId, \
 modelBuildId = createModelBuildResponse.id
 deployment.createModelDeployment(modelBuildId, prdProjId, modelCreationId)
 
-
 ## NOW TRY A REQUEST WITH THIS PAYLOAD!
 
 args={"pattern": [54,53,52,51]}
