@@ -63,7 +63,7 @@ class IotDataGen:
         self.connectionName = connectionName
 
 
-    def dataGen(self, spark, minLatitude, maxLatitude, minLongitude, maxLongitude, shuffle_partitions_requested = 5, partitions_requested = 10, data_rows = 14400):
+    def dataGen(self, spark, shuffle_partitions_requested = 1, partitions_requested = 1, data_rows = 1440):
         """
         Method to create IoT fleet data in Spark Df
         """
@@ -73,14 +73,14 @@ class IotDataGen:
         iotDataSpec = (
             dg.DataGenerator(spark, name="device_data_set", rows=data_rows, partitions=partitions_requested)
             .withIdOutput()
-            .withColumn("internal_device_id", "long", minValue=0x1000000000000, uniqueValues=int(data_rows/1440), omit=True, baseColumnType="hash")
+            .withColumn("internal_device_id", "long", minValue=0x1000000000000, uniqueValues=int(data_rows/36), omit=True, baseColumnType="hash")
             .withColumn("device_id", "string", format="0x%013x", baseColumn="internal_device_id")
             .withColumn("manufacturer", "string", values=manufacturers, baseColumn="internal_device_id", )
             .withColumn("model_ser", "integer", minValue=1, maxValue=11, baseColumn="device_id", baseColumnType="hash", omit=True, )
             .withColumn("event_type", "string", values=["tank below 10%", "tank below 5%", "device error", "system malfunction"], random=True)
             .withColumn("event_ts", "timestamp", begin="2023-12-01 01:00:00", end="2023-12-01 23:59:00", interval="1 minute", random=False )
-            .withColumn("longitude", "float", minValue=minLongitude, maxValue=maxLongitude, random=True )
-            .withColumn("latitude", "float", minValue=minLatitude, maxValue=maxLatitude, random=True )
+            .withColumn("longitude", "float", expr="rand() + -93.6295")
+            .withColumn("latitude", "float", expr="rand() + 41.5949")
             .withColumn("iot_signal_1", "integer", minValue=1, maxValue=10, random=True)
             .withColumn("iot_signal_2", "integer", minValue=1000, maxValue=1020, random=True)
             .withColumn("iot_signal_3", "integer", minValue=50, maxValue=55, random=True)
@@ -168,8 +168,7 @@ def main():
     # Create CML Spark Connection
     spark = dg.createSparkConnection()
 
-    desmoines_minLatitude, desmoines_maxLatitude, desmoines_minLongitude, desmoines_maxLongitude = 41.51341, 41.67468, -93.9000, -93.5000
-    df_desmoines = dg.dataGen(spark, desmoines_minLatitude, desmoines_maxLatitude, desmoines_minLongitude, desmoines_maxLongitude)
+    df_desmoines = dg.dataGen(spark)
 
     # Drop Spark Database if exists
     dg.dropDatabase(spark)
