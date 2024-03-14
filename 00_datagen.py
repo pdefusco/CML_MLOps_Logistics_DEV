@@ -82,7 +82,6 @@ class IotDataGen:
             .withColumn("longitude", "float", expr="rand() + -93.6295")
             .withColumn("latitude", "float", expr="rand() + 41.5949")
             .withColumn("iot_signal_1", "integer", minValue=1, maxValue=10, random=True)
-            .withColumn("iot_signal_2", "integer", minValue=1000, maxValue=1020, random=True)
             .withColumn("iot_signal_3", "integer", minValue=50, maxValue=55, random=True)
             .withColumn("iot_signal_4", "integer", minValue=100, maxValue=107, random=True)
         )
@@ -90,6 +89,23 @@ class IotDataGen:
         df = iotDataSpec.build()
 
         return df
+
+
+    def addCorrelatedColumn(self, dataGenDf):
+        """
+        Method to create a column iot_signal_2 with value that is correlated to value of iot_signal_1 column
+        """
+
+        from pyspark.sql.functions import udf
+        import random
+
+        def addColUdf(val):
+          return (val)+random.randint(0, 2)
+
+        udf_column = udf(addColUdf, IntegerType())
+        dataGenDf = dataGenDf.withColumn('iot_signal_2', udf_column('iot_signal_1'))
+
+        return dataGenDf
 
 
     def createSparkConnection(self):
@@ -167,8 +183,8 @@ def main():
 
     # Create CML Spark Connection
     spark = dg.createSparkConnection()
-
     df_desmoines = dg.dataGen(spark)
+    df_desmoines = dg.addCorrelatedColumn(df_desmoines)
 
     # Drop Spark Database if exists
     dg.dropDatabase(spark)
