@@ -6,3 +6,5 @@ pyarrow==14.0.1
 seaborn==0.13.2
 pandas==1.5.3
 apache-sedona==1.5.1
+geopandas==0.14.3
+folium==0.16.0
