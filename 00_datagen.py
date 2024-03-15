@@ -68,7 +68,7 @@ class IotDataGen:
         Method to create IoT fleet data in Spark Df
         """
 
-        manufacturers = ["New World Corp", "AIAI Inc.", "Hot Data Ltd"]
+        manufacturers = ["New World Corp", "AI Inc.", "Hot Data Ltd"]
 
         iotDataSpec = (
             dg.DataGenerator(spark, name="device_data_set", rows=data_rows, partitions=partitions_requested)
