@@ -56,9 +56,8 @@ class IotDataGen:
 
     '''Class to Generate IoT Fleet Data'''
 
-    def __init__(self, username, dbname, storage, connectionName):
+    def __init__(self, username, dbname, connectionName):
         self.username = username
-        self.storage = storage
         self.dbname = dbname
         self.connectionName = connectionName
 
@@ -175,11 +174,10 @@ def main():
 
     USERNAME = os.environ["PROJECT_OWNER"]
     DBNAME = "LOGISTICS_MLOPS_{}".format(USERNAME)
-    STORAGE = "s3a://go01-demo/"
     CONNECTION_NAME = "go01-aw-dl"
 
     # Instantiate BankDataGen class
-    dg = IotDataGen(USERNAME, DBNAME, STORAGE, CONNECTION_NAME)
+    dg = IotDataGen(USERNAME, DBNAME, CONNECTION_NAME)
 
     # Create CML Spark Connection
     spark = dg.createSparkConnection()
