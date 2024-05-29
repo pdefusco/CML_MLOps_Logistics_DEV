@@ -172,7 +172,7 @@ class IotDataGen:
 
 def main():
 
-    USERNAME = os.environ["PROJECT_OWNER"]
+    USERNAME = os.environ["PROJECT_USER"]
     DBNAME = "LOGISTICS_MLOPS_{}".format(USERNAME)
     CONNECTION_NAME = "go01-aw-dl"
 
